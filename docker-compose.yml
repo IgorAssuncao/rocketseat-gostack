@@ -1,0 +1,29 @@
+version: '3.7'
+services:
+  gobarber-api:
+    build:
+      context: ./gobarber
+    volumes:
+      - './gobarber:/usr/app'
+    ports:
+      - '3000:3000'
+    depends_on:
+      - 'postgres'
+    networks:
+      - 'webnet'
+
+  postgres:
+    image: postgres:11.5
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=docker
+    volumes:
+      - './data:/data'
+    ports:
+      - '31170:31170'
+    networks:
+      - 'webnet'
+
+networks:
+  webnet:
+    driver: bridge
