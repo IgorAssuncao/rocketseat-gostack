@@ -10,4 +10,4 @@ class FileController {
   }
 }
 
-export default FileController;
+export default new FileController();
