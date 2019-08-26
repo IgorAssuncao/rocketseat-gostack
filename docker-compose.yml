@@ -15,10 +15,10 @@ services:
 
   meetapp-api:
     build:
-      context: ./meetapp-challenge
+      context: ./meetapp
     env_file: .env
     volumes:
-      - "./meetapp-challenge:/usr/app"
+      - "./meetapp:/usr/app"
     ports:
       - "3000:3000"
     depends_on:
