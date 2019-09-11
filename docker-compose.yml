@@ -32,9 +32,18 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=docker
     volumes:
-      - "./data:/data"
+      - "./data/postgres:/var/lib/postgresql"
     ports:
       - "5432:5432"
+    networks:
+      - "webnet"
+
+  mongo:
+    image: mongo:4.2-bionic
+    volumes:
+      - "./data/mongo:/data/db"
+    ports:
+      - "27017:27017"
     networks:
       - "webnet"
 
