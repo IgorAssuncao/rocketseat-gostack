@@ -1,11 +1,13 @@
 import * as Yup from 'yup';
-import { startOfHour, parseISO, isBefore, format } from 'date-fns';
+import { startOfHour, parseISO, isBefore, format, subHours } from 'date-fns';
 
 import User from '../models/User';
 import File from '../models/File';
 import Appointment from '../models/Appointment';
 
 import Notification from '../schemas/Notification';
+
+import Mail from '../../lib/Mail';
 
 class AppointmentController {
   async index(request, response) {
@@ -60,6 +62,12 @@ class AppointmentController {
         .json({ error: 'You can only create appointments with providers' });
     }
 
+    if (request.userId == provider_id) {
+      return response
+        .status(401)
+        .json({ error: `User can't create an appointment with himself` });
+    }
+
     const hourStart = startOfHour(parseISO(date));
 
     if (isBefore(hourStart, new Date())) {
@@ -89,11 +97,59 @@ class AppointmentController {
     });
 
     const user = await User.findByPk(request.userId);
-    const formattedDate = format(hourStart, "dd'/'MMMM'-'H:mm'h'");
+    const formattedDate = format(hourStart, "dd'/'MMMM/yyyy'-'H:mm'h'");
 
     await Notification.create({
-      content: `New appointment of ${user.name} to ${formattedDate}`,
+      content: `New appointment for ${user.name} at ${formattedDate}`,
       user: provider_id,
+    });
+
+    return response.json(appointment);
+  }
+
+  async delete(request, response) {
+    const appointment = await Appointment.findByPk(request.params.id, {
+      include: [
+        {
+          model: User,
+          as: 'provider',
+          attributes: ['name', 'email'],
+        },
+        {
+          model: User,
+          as: 'user',
+          attributes: ['name'],
+        },
+      ],
+    });
+
+    if (appointment.user_id !== request.userId) {
+      return response.status(401).json({
+        error: `You don't have permission to cancel this appointment.`,
+      });
+    }
+
+    const dateWithSub = subHours(appointment.date, 2);
+
+    if (isBefore(dateWithSub, new Date())) {
+      return response.status(401).json({
+        error: `An appointment can only be canceled at least 2 hours in advance.`,
+      });
+    }
+
+    appointment.canceled_at = new Date();
+
+    await appointment.save();
+
+    await Mail.sendMail({
+      to: `${appointment.provider.name} <${appointment.provider.email}>`,
+      subject: 'Agendamento cancelado',
+      template: 'cancelation',
+      context: {
+        provider: appointment.provider.name,
+        user: appointment.user.name,
+        date: format(appointment.date, "dd'/'MMMM/yyyy'-'H:mm'h'"),
+      },
     });
 
     return response.json(appointment);
