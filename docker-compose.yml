@@ -13,19 +13,6 @@ services:
     networks:
       - "webnet"
 
-  meetapp-api:
-    build:
-      context: ./meetapp
-    env_file: .env
-    volumes:
-      - "./meetapp:/usr/app"
-    ports:
-      - "3000:3000"
-    depends_on:
-      - "postgres"
-    networks:
-      - "webnet"
-
   postgres:
     image: postgres:11.5
     environment:
