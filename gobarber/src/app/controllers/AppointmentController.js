@@ -7,7 +7,8 @@ import Appointment from '../models/Appointment';
 
 import Notification from '../schemas/Notification';
 
-import Mail from '../../lib/Mail';
+import CancelationMail from '../jobs/CancelationMail';
+import Queue from '../../lib/Queue';
 
 class AppointmentController {
   async index(request, response) {
@@ -62,7 +63,7 @@ class AppointmentController {
         .json({ error: 'You can only create appointments with providers' });
     }
 
-    if (request.userId == provider_id) {
+    if (request.userId === provider_id) {
       return response
         .status(401)
         .json({ error: `User can't create an appointment with himself` });
@@ -141,15 +142,8 @@ class AppointmentController {
 
     await appointment.save();
 
-    await Mail.sendMail({
-      to: `${appointment.provider.name} <${appointment.provider.email}>`,
-      subject: 'Agendamento cancelado',
-      template: 'cancelation',
-      context: {
-        provider: appointment.provider.name,
-        user: appointment.user.name,
-        date: format(appointment.date, "dd'/'MMMM/yyyy'-'H:mm'h'"),
-      },
+    await Queue.add(CancelationMail.key, {
+      appointment,
     });
 
     return response.json(appointment);

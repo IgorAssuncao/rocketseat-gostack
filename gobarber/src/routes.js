@@ -9,6 +9,7 @@ import FileController from './app/controllers/FileController';
 import ProviderController from './app/controllers/ProviderController';
 import AppointmentController from './app/controllers/AppointmentController';
 import NotificationController from './app/controllers/NotificationController';
+import AvailableController from './app/controllers/AvailableController';
 
 import multerConfig from './config/multer';
 import ScheduleController from './app/controllers/ScheduleController';
@@ -28,7 +29,7 @@ routes.use(authMiddleware);
 routes.put('/users', UserController.update);
 
 routes.get('/providers', ProviderController.index);
-
+routes.get('/providers/:providerId/available', AvailableController.index);
 routes.get('/appointments', AppointmentController.index);
 routes.post('/appointments', AppointmentController.store);
 routes.delete('/appointments/:id', AppointmentController.delete);
