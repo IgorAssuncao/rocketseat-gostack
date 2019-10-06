@@ -25,11 +25,10 @@ class Database {
   }
 
   mongo() {
-    const host = process.env.NODE_ENV !== undefined ? 'mongo' : '0.0.0.0';
-    this.mongoConnection = mongoose.connect(
-      `mongodb://${host}:27017/gobarber`,
-      { useNewUrlParser: true, useFindAndModify: true }
-    );
+    this.mongoConnection = mongoose.connect(process.env.MONGO_URL, {
+      useNewUrlParser: true,
+      useFindAndModify: true,
+    });
   }
 }
 
